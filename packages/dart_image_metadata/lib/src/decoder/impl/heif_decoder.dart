@@ -45,12 +45,15 @@ class HeifDecoder extends BaseDecoder {
 
   @override
   Future<bool> isValid(ImageInput input) async {
-    final lengthBytes = await input.getRange(0, 4);
-    final length = lengthBytes.toBigEndian();
-    final typeBoxBytes = await input.getRange(0, length);
-
-    final bmff = Bmff.memory(typeBoxBytes);
-    return _checkHeic(bmff);
+    try {
+      final lengthBytes = await input.getRange(0, 4);
+      final length = lengthBytes.toBigEndian();
+      final typeBoxBytes = await input.getRange(0, length);
+      final bmff = Bmff.memory(typeBoxBytes);
+      return _checkHeic(bmff);
+    } catch (e) {
+      return false;
+    }
   }
 
   bool _checkHeic(Bmff bmff) {

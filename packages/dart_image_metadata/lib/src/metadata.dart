@@ -143,13 +143,34 @@ class ImageMetadata {
       }
     }
 
+    ImageMetadata? imageMetadata;
+
+    // 1. check valid
     for (var value in _decoders) {
-      if (await value.isValid(input)) {
-        return value.parse(input);
+      bool valid = false;
+      try {
+        valid = await value.isValid(input);
+      } catch (e) {
+        //
+      }
+      if (valid) {
+        imageMetadata = await value.parse(input);
+      }
+      if (imageMetadata != null) break;
+    }
+
+    // 2. try parse directly
+    if (imageMetadata == null) {
+      for (var value in _decoders) {
+        imageMetadata = await value.parse(input);
+        if (imageMetadata != null) break;
       }
     }
 
-    throw UnsupportedError('The input is not supported.');
+    if (imageMetadata == null) {
+      throw UnsupportedError('The input is not supported.');
+    }
+    return imageMetadata;
   }
 //</editor-fold>
 }
@@ -189,10 +210,10 @@ class _DecoderContainer extends IterableBase<BaseDecoder> {
 ///
 /// This instance is used to register [BaseDecoder]s, it will be used by [ImageMetadataGetter].
 final _decoders = _DecoderContainer([
-  const GifDecoder(),
   const JpegDecoder(),
-  const WebpDecoder(),
   const PngDecoder(),
-  const BmpDecoder(),
+  const GifDecoder(),
+  const WebpDecoder(),
   HeifDecoder(),
+  const BmpDecoder(),
 ]);

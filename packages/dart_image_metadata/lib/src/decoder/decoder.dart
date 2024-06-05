@@ -20,7 +20,7 @@ abstract class BaseDecoder {
   Future<bool> isValid(ImageInput input);
 
   /// {@macro image_size_getter.BaseDecoder.getSize}
-  Future<ImageMetadata> parse(ImageInput input);
+  Future<ImageMetadata?> parse(ImageInput input);
 
   /// Convert hex a decimal list to int type.
   ///
