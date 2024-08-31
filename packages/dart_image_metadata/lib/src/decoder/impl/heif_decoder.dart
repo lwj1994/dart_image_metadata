@@ -13,34 +13,38 @@ class HeifDecoder extends BaseDecoder {
 
   @override
   Future<ImageMetadata> parse(ImageInput input) async {
-    final context = AsyncBmffContext.common(
-      () {
-        return input.length;
-      },
-      (start, end) => input.getRange(start, end),
-      fullBoxTypes: fullTypeBox,
-    );
+    try {
+      final context = AsyncBmffContext.common(
+        () {
+          return input.length;
+        },
+        (start, end) => input.getRange(start, end),
+        fullBoxTypes: fullTypeBox,
+      );
 
-    final bmff = await Bmff.asyncContext(context);
-    // final iprp = bmff['meta']['iprp'];
-    // final ispe = await iprp.updateForceFullBox(false).then((value) async {
-    //   final ipco = iprp['ipco'];
-    //   await ipco.init();
-    //   return ipco;
-    // }).then((value) => value['ispe']);
+      final bmff = await Bmff.asyncContext(context);
+      // final iprp = bmff['meta']['iprp'];
+      // final ispe = await iprp.updateForceFullBox(false).then((value) async {
+      //   final ipco = iprp['ipco'];
+      //   await ipco.init();
+      //   return ipco;
+      // }).then((value) => value['ispe']);
 
-    final ispe = bmff['meta']['iprp']['ipco']['ispe'];
+      final ispe = bmff['meta']['iprp']['ipco']['ispe'];
 
-    final buffer = await ispe.getByteBuffer();
+      final buffer = await ispe.getByteBuffer();
 
-    final width = buffer.getUint32(0, Endian.big);
-    final height = buffer.getUint32(1, Endian.big);
+      final width = buffer.getUint32(0, Endian.big);
+      final height = buffer.getUint32(1, Endian.big);
 
-    return ImageMetadata(
-      width: width,
-      height: height,
-      mimeType: "image/heif",
-    );
+      return ImageMetadata(
+        width: width,
+        height: height,
+        mimeType: "image/heif",
+      );
+    } catch (e) {
+      return ImageMetadata(exception: e);
+    }
   }
 
   @override

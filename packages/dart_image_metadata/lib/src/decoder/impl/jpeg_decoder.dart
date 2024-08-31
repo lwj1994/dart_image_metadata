@@ -16,56 +16,61 @@ class JpegDecoder extends BaseDecoder with SimpleTypeValidator {
 
   @override
   Future<ImageMetadata> parse(ImageInput input) async {
-    int start = 2;
-    BlockEntity? block;
-    int? orientation;
+    try {
+      int start = 2;
+      BlockEntity? block;
+      int? orientation;
 
-    while (true) {
-      block = await _getBlockAsync(input, start);
+      while (true) {
+        block = await _getBlockAsync(input, start);
 
-      if (block == null) {
-        throw Exception('Invalid jpeg file');
-      }
-      if (block.type == 0xE1) {
-        final app1BlockData = await input.getRange(
-          start,
-          block.start + block.length,
-        );
-        final exifOrientation = _getOrientation(app1BlockData);
-        if (exifOrientation != null) {
-          orientation = exifOrientation;
+        if (block == null) {
+          throw Exception('Invalid jpeg file');
+        }
+        if (block.type == 0xE1) {
+          final app1BlockData = await input.getRange(
+            start,
+            block.start + block.length,
+          );
+          final exifOrientation = _getOrientation(app1BlockData);
+          if (exifOrientation != null) {
+            orientation = exifOrientation;
+          }
+        }
+        // ((#xC0 #xC1 #xC2 #xC3 #xC5 #xC6 #xC7 #xC9 #xCA #xCB #xCD #xCE #xCF)
+        if (block.type == 0xC0 ||
+            block.type == 0xC1 ||
+            block.type == 0xC2 ||
+            block.type == 0xC3 ||
+            block.type == 0xC5 ||
+            block.type == 0xC6 ||
+            block.type == 0xC7 ||
+            block.type == 0xC9 ||
+            block.type == 0xCA ||
+            block.type == 0xCB ||
+            block.type == 0xCD ||
+            block.type == 0xCE ||
+            block.type == 0xCF) {
+          final widthList = await input.getRange(start + 7, start + 9);
+          final heightList = await input.getRange(start + 5, start + 7);
+          orientation ??= (await input.getRange(start + 9, start + 10))[0];
+
+          int width = convertRadix16ToInt(widthList);
+          int height = convertRadix16ToInt(heightList);
+
+          final rotate90Degree = [5, 6, 7, 8].contains(orientation);
+          return ImageMetadata(
+              width: rotate90Degree ? height : width,
+              height: rotate90Degree ? width : height,
+              orientation: orientation,
+              mimeType: "image/jpeg");
+        } else {
+          start += block.length;
         }
       }
-      // ((#xC0 #xC1 #xC2 #xC3 #xC5 #xC6 #xC7 #xC9 #xCA #xCB #xCD #xCE #xCF)
-      if (block.type == 0xC0 ||
-          block.type == 0xC1 ||
-          block.type == 0xC2 ||
-          block.type == 0xC3 ||
-          block.type == 0xC5 ||
-          block.type == 0xC6 ||
-          block.type == 0xC7 ||
-          block.type == 0xC9 ||
-          block.type == 0xCA ||
-          block.type == 0xCB ||
-          block.type == 0xCD ||
-          block.type == 0xCE ||
-          block.type == 0xCF) {
-        final widthList = await input.getRange(start + 7, start + 9);
-        final heightList = await input.getRange(start + 5, start + 7);
-        orientation ??= (await input.getRange(start + 9, start + 10))[0];
-
-        int width = convertRadix16ToInt(widthList);
-        int height = convertRadix16ToInt(heightList);
-
-        final rotate90Degree = [5, 6, 7, 8].contains(orientation);
-        return ImageMetadata(
-            width: rotate90Degree ? height : width,
-            height: rotate90Degree ? width : height,
-            orientation: orientation,
-            mimeType: "image/jpeg");
-      } else {
-        start += block.length;
-      }
+    } catch (e) {
+      print("parse ${decoderName} error, ${e}");
+      return ImageMetadata(exception: e);
     }
   }
 

@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:dart_image_metadata/file_input.dart';
 import 'package:dart_image_metadata/dart_image_metadata.dart';
 import 'package:dart_image_metadata/src/decoder/impl/heif_decoder.dart';
+import 'package:dart_image_metadata/src/file_input.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -36,7 +36,7 @@ void main() {
     });
 
     test('Test png decoder', () async {
-      final png = File('../../example/asset/ic_launcher.png');
+      final png = File('../../example/asset/img.png');
 
       const PngDecoder decoder = PngDecoder();
       final input = FileInput(png);

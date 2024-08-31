@@ -13,12 +13,16 @@ class GifDecoder extends BaseDecoder with MutilFileHeaderAndFooterValidator {
 
   @override
   Future<ImageMetadata> parse(ImageInput input) async {
-    final widthList = await input.getRange(6, 8);
-    final heightList = await input.getRange(8, 10);
-    final width = convertRadix16ToInt(widthList, reverse: true);
-    final height = convertRadix16ToInt(heightList, reverse: true);
+    try {
+      final widthList = await input.getRange(6, 8);
+      final heightList = await input.getRange(8, 10);
+      final width = convertRadix16ToInt(widthList, reverse: true);
+      final height = convertRadix16ToInt(heightList, reverse: true);
 
-    return ImageMetadata(width: width, height: height, mimeType: "image/gif");
+      return ImageMetadata(width: width, height: height, mimeType: "image/gif");
+    } catch (e) {
+      return ImageMetadata(exception: e);
+    }
   }
 
   @override
