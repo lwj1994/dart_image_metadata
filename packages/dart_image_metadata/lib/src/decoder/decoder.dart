@@ -20,7 +20,7 @@ abstract class BaseDecoder {
   Future<bool> isValid(ImageInput input);
 
   /// {@macro image_size_getter.BaseDecoder.getSize}
-  Future<ImageMetadata?> parse(ImageInput input);
+  Future<ImageMetadata> parse(ImageInput input);
 
   /// Convert hex a decimal list to int type.
   ///
@@ -58,25 +58,29 @@ mixin SimpleTypeValidator on BaseDecoder {
 
   @override
   Future<bool> isValid(ImageInput input) async {
-    final length = await input.length;
-    final header = await input.getRange(
-      0,
-      simpleFileHeaderAndFooter.startBytes.length,
-    );
-    final footer = await input.getRange(
-      length - simpleFileHeaderAndFooter.endBytes.length,
-      length,
-    );
+    try {
+      final length = await input.length;
+      final header = await input.getRange(
+        0,
+        simpleFileHeaderAndFooter.startBytes.length,
+      );
+      final footer = await input.getRange(
+        length - simpleFileHeaderAndFooter.endBytes.length,
+        length,
+      );
 
-    final headerEquals = compareTwoList(
-      header,
-      simpleFileHeaderAndFooter.startBytes,
-    );
-    final footerEquals = compareTwoList(
-      footer,
-      simpleFileHeaderAndFooter.endBytes,
-    );
-    return headerEquals && footerEquals;
+      final headerEquals = compareTwoList(
+        header,
+        simpleFileHeaderAndFooter.startBytes,
+      );
+      final footerEquals = compareTwoList(
+        footer,
+        simpleFileHeaderAndFooter.endBytes,
+      );
+      return headerEquals && footerEquals;
+    } catch (e) {
+      return false;
+    }
   }
 }
 
@@ -109,33 +113,37 @@ mixin MutilFileHeaderAndFooterValidator on BaseDecoder {
 
   @override
   Future<bool> isValid(ImageInput input) async {
-    final length = await input.length;
+    try {
+      final length = await input.length;
 
-    for (final header in headerAndFooter.mutipleStartBytesList) {
-      for (final footer in headerAndFooter.mutipleEndBytesList) {
-        final fileHeader = await input.getRange(
-          0,
-          header.length,
-        );
-        final fileFooter = await input.getRange(
-          length - footer.length,
-          length,
-        );
+      for (final header in headerAndFooter.mutipleStartBytesList) {
+        for (final footer in headerAndFooter.mutipleEndBytesList) {
+          final fileHeader = await input.getRange(
+            0,
+            header.length,
+          );
+          final fileFooter = await input.getRange(
+            length - footer.length,
+            length,
+          );
 
-        final headerEquals = compareTwoList(
-          header,
-          fileHeader,
-        );
-        final footerEquals = compareTwoList(
-          footer,
-          fileFooter,
-        );
-        if (headerEquals && footerEquals) {
-          return true;
+          final headerEquals = compareTwoList(
+            header,
+            fileHeader,
+          );
+          final footerEquals = compareTwoList(
+            footer,
+            fileFooter,
+          );
+          if (headerEquals && footerEquals) {
+            return true;
+          }
         }
       }
-    }
 
-    return false;
+      return false;
+    } catch (e) {
+      return false;
+    }
   }
 }

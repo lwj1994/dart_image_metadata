@@ -2,9 +2,9 @@ import 'dart:collection';
 import 'dart:io';
 
 import 'package:dart_image_metadata/dart_image_metadata.dart';
-import 'package:dart_image_metadata/file_input.dart';
 
 import 'decoder/impl/heif_decoder.dart';
+import 'file_input.dart';
 
 export 'core/input.dart';
 
@@ -32,6 +32,7 @@ class ImageMetadata {
   /// The height of the media.
   final int height;
   final String mimeType;
+  final Object? exception;
 
   String get extensionName =>
       mimeType.substring("image/".length, mimeType.length);
@@ -49,6 +50,8 @@ class ImageMetadata {
   /// The [width] is zero and [height] is zero.
   static ImageMetadata none = const ImageMetadata();
 
+  bool get isSuccess => width > 0 && height > 0 && exception == null;
+
 //<editor-fold desc="Data Methods">
 
   const ImageMetadata({
@@ -56,6 +59,7 @@ class ImageMetadata {
     this.height = 0,
     this.mimeType = "image/png",
     this.orientation = 0,
+    this.exception,
   });
 
   @override
@@ -143,32 +147,28 @@ class ImageMetadata {
       }
     }
 
-    ImageMetadata? imageMetadata;
+    ImageMetadata imageMetadata = ImageMetadata.none;
 
     // 1. check valid
     for (var value in _decoders) {
-      bool valid = false;
-      try {
-        valid = await value.isValid(input);
-      } catch (e) {
-        //
-      }
-      if (valid) {
+      if (await value.isValid(input)) {
         imageMetadata = await value.parse(input);
       }
-      if (imageMetadata != null) break;
+      if (imageMetadata.isSuccess) break;
     }
 
-    // 2. try parse directly
-    if (imageMetadata == null) {
+    // 2. try parse directly again
+    if (!imageMetadata.isSuccess) {
       for (var value in _decoders) {
         imageMetadata = await value.parse(input);
-        if (imageMetadata != null) break;
+        if (imageMetadata.isSuccess) {
+          break;
+        }
       }
     }
-
-    if (imageMetadata == null) {
-      throw UnsupportedError('The input is not supported.');
+    if (!imageMetadata.isSuccess) {
+      throw UnsupportedError(
+          'The input is not supported. ${imageMetadata.exception ?? ""}');
     }
     return imageMetadata;
   }

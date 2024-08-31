@@ -14,15 +14,19 @@ class PngDecoder extends BaseDecoder with SimpleTypeValidator {
 
   @override
   Future<ImageMetadata> parse(ImageInput input) async {
-    final widthList = await input.getRange(0x10, 0x14);
-    final heightList = await input.getRange(0x14, 0x18);
-    final width = convertRadix16ToInt(widthList);
-    final height = convertRadix16ToInt(heightList);
-    return ImageMetadata(
-      width: width,
-      height: height,
-      mimeType: "image/png",
-    );
+    try {
+      final widthList = await input.getRange(0x10, 0x14);
+      final heightList = await input.getRange(0x14, 0x18);
+      final width = convertRadix16ToInt(widthList);
+      final height = convertRadix16ToInt(heightList);
+      return ImageMetadata(
+        width: width,
+        height: height,
+        mimeType: "image/png",
+      );
+    } catch (e) {
+      return ImageMetadata(exception: e);
+    }
   }
 
   @override
