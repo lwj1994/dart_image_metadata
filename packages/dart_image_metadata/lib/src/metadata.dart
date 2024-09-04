@@ -157,15 +157,6 @@ class ImageMetadata {
       if (imageMetadata.isSuccess) break;
     }
 
-    // 2. try parse directly again
-    if (!imageMetadata.isSuccess) {
-      for (var value in _decoders) {
-        imageMetadata = await value.parse(input);
-        if (imageMetadata.isSuccess) {
-          break;
-        }
-      }
-    }
     if (!imageMetadata.isSuccess) {
       throw UnsupportedError(
           'The input is not supported. ${imageMetadata.exception ?? ""}');

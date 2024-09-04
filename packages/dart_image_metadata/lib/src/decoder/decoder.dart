@@ -98,26 +98,26 @@ mixin SimpleFileHeaderAndFooter {
 }
 
 /// The content have multiple headers or footers.
-mixin MutilFileHeaderAndFooter {
-  /// When the [mutipleStartBytes] is true, this is the start bytes of the file.
-  List<List<int>> get mutipleStartBytesList;
+mixin MultiFileHeaderAndFooter {
+  /// When the [multipleStartBytes] is true, this is the start bytes of the file.
+  List<List<int>> get multipleStartBytesList;
 
-  /// When the [mutipleEndBytes] is true, this is the end bytes of the file.
-  List<List<int>> get mutipleEndBytesList;
+  /// When the [multipleEndBytes] is true, this is the end bytes of the file.
+  List<List<int>> get multipleEndBytesList;
 }
 
 /// Validate the content.
-mixin MutilFileHeaderAndFooterValidator on BaseDecoder {
+mixin MultiFileHeaderAndFooterValidator on BaseDecoder {
   /// {@macro image_size_getter.SimpleFileHeaderAndFooter}
-  MutilFileHeaderAndFooter get headerAndFooter;
+  MultiFileHeaderAndFooter get headerAndFooter;
 
   @override
   Future<bool> isValid(ImageInput input) async {
     try {
       final length = await input.length;
 
-      for (final header in headerAndFooter.mutipleStartBytesList) {
-        for (final footer in headerAndFooter.mutipleEndBytesList) {
+      for (final header in headerAndFooter.multipleStartBytesList) {
+        for (final footer in headerAndFooter.multipleEndBytesList) {
           final fileHeader = await input.getRange(
             0,
             header.length,

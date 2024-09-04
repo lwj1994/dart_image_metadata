@@ -1,3 +1,3 @@
 unset PUB_HOSTED_URL
-cd packages/image_size_getter
+cd packages/dart_image_metadata
 dart pub publish
