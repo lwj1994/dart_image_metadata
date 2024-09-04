@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:bmff/bmff.dart';
-import 'package:dart_image_metadata/dart_image_metadata.dart';
+import 'package:collection/collection.dart';
+import 'package:dart_image_metadata/src/decoder/decoder.dart';
+import 'package:dart_image_metadata/src/metadata.dart';
 
 class HeifDecoder extends BaseDecoder {
-  HeifDecoder({this.fullTypeBox = defaultFullBoxTypes});
+  HeifDecoder({this.fullTypeBox = _defaultFullBoxTypes});
 
   final List<String> fullTypeBox;
 
@@ -15,33 +17,43 @@ class HeifDecoder extends BaseDecoder {
   Future<ImageMetadata> parse(ImageInput input) async {
     try {
       final context = AsyncBmffContext.common(
-        () {
-          return input.length;
-        },
+        () => input.length,
         (start, end) => input.getRange(start, end),
         fullBoxTypes: fullTypeBox,
       );
 
       final bmff = await Bmff.asyncContext(context);
-      // final iprp = bmff['meta']['iprp'];
-      // final ispe = await iprp.updateForceFullBox(false).then((value) async {
-      //   final ipco = iprp['ipco'];
-      //   await ipco.init();
-      //   return ipco;
-      // }).then((value) => value['ispe']);
+      final meta =
+          bmff.childBoxes.firstWhereOrNull((box) => box.type == 'meta');
+      if (meta == null) {
+        throw Exception('meta box not found');
+      }
 
-      final ispe = bmff['meta']['iprp']['ipco']['ispe'];
+      final iprp =
+          meta.childBoxes.firstWhereOrNull((box) => box.type == 'iprp');
+      if (iprp == null) {
+        throw Exception('iprp box not found');
+      }
 
-      final buffer = await ispe.getByteBuffer();
+      final ipco =
+          iprp.childBoxes.firstWhereOrNull((box) => box.type == 'ipco');
+      if (ipco != null) {
+        // 检查是否存在 ispe box
+        final ispeBox =
+            ipco.childBoxes.firstWhereOrNull((box) => box.type == 'ispe');
 
-      final width = buffer.getUint32(0, Endian.big);
-      final height = buffer.getUint32(1, Endian.big);
-
-      return ImageMetadata(
-        width: width,
-        height: height,
-        mimeType: "image/heif",
-      );
+        if (ispeBox != null) {
+          final buffer = await ispeBox.getByteBuffer();
+          final width = buffer.getUint32(0, Endian.big);
+          final height = buffer.getUint32(1, Endian.big);
+          return ImageMetadata(
+            width: width,
+            height: height,
+            mimeType: "image/heif",
+          );
+        }
+      }
+      throw Exception('ispe box not found');
     } catch (e) {
       return ImageMetadata(exception: e);
     }
@@ -73,7 +85,7 @@ class BmffImageContext extends BmffContext {
 
   BmffImageContext(
     this.input, {
-    List<String> fullBoxTypes = defaultFullBoxTypes,
+    List<String> fullBoxTypes = _defaultFullBoxTypes,
   }) : super(fullBoxTypes: fullBoxTypes);
 
   @override
@@ -88,13 +100,8 @@ class BmffImageContext extends BmffContext {
   int get length => input.lengthSync;
 }
 
-const List<String> defaultFullBoxTypes = [
-  'meta',
-  // 'hdlr',
-  // 'pitm',
-  // 'iloc',
-  // 'iinf',
-  // 'infe',
-  // 'iref',
-  'ispe',
+const List<String> _defaultFullBoxTypes = [
+  // 'ftyp', // 文件类型 box
+  'meta', // 元数据 box
+  'ispe', // 图像空间信息 box
 ];

@@ -8,8 +8,8 @@ environment:
   sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
-  image_metadata_getter:
-    path: ../packages/image_metadata_getter
+  dart_image_metadata:
+    path: ../packages/dart_image_metadata
 
 dev_dependencies:
   pedantic: ^1.7.0
