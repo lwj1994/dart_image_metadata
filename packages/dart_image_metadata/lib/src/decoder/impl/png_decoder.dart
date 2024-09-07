@@ -37,10 +37,38 @@ class PngDecoder extends BaseDecoder with SimpleTypeValidator {
       // 进一步检查第一个块是否为 IHDR 块
       final isIHDRChunk = compareTwoList(ihdrChunkType, _PngHeaders.ihdr);
 
-      return headerEquals && footerEquals && isIHDRChunk;
+      if (headerEquals && isIHDRChunk) {
+        if (footerEquals) {
+          return true;
+        } else {
+          // 某些图片的 footer 不标准 尝试解析一下
+          return (await parse(input)).isSuccess;
+        }
+      }
+
+      return false;
     } catch (e) {
       return false;
     }
+  }
+
+  Future<int> _getBitDepth(ImageInput input) async {
+    // PNG 文件签名长度
+    const int pngSignatureLength = 8;
+    // IHDR 块的起始位置
+    const int ihdrStart = pngSignatureLength + 8; // 跳过签名和长度字段
+    // IHDR 块中位深度字段的位置
+    const int bitDepthPosition = ihdrStart + 8; // 跳过宽度和高度字段
+
+    // 读取位深度字段
+    final bitDepthBytes =
+        await input.getRange(bitDepthPosition, bitDepthPosition + 1);
+    if (bitDepthBytes.isEmpty) {
+      return 0;
+    }
+
+    // 返回位深度
+    return bitDepthBytes[0];
   }
 
   @override
@@ -57,9 +85,12 @@ class PngDecoder extends BaseDecoder with SimpleTypeValidator {
       final width = convertRadix16ToInt(widthList);
       final height = convertRadix16ToInt(heightList);
 
+      // 读取位深度字段
+      final bitDepth = await _getBitDepth(input);
       return ImageMetadata(
         width: width,
         height: height,
+        bitDepth: bitDepth,
         mimeType: "image/png",
       );
     } catch (e) {
