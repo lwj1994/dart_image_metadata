@@ -8,29 +8,18 @@ import 'file_input.dart';
 
 export 'core/input.dart';
 
-/// {@template image_size_getter.Size}
 ///
 /// [Size] is a class for image size.
 ///
 /// The size contains [width] and [height].
 ///
-/// {@endtemplate}
 ///
 /// ---
 ///
-/// {@macro image_size_getter.Size.needToRotate}
 class ImageMetadata {
-  /// {@macro image_size_getter.Size}
-  ///
-  /// ---
-  ///
-  /// {@macro image_size_getter.Size.needToRotate}
-
-  /// The width of the media.
   final int width;
-
-  /// The height of the media.
   final int height;
+  final int bitDepth;
   final String mimeType;
   final Object? exception;
 
@@ -57,6 +46,7 @@ class ImageMetadata {
   const ImageMetadata({
     this.width = 0,
     this.height = 0,
+    this.bitDepth = 0,
     this.mimeType = "image/png",
     this.orientation = 0,
     this.exception,
@@ -69,6 +59,7 @@ class ImageMetadata {
           runtimeType == other.runtimeType &&
           width == other.width &&
           height == other.height &&
+          bitDepth == other.bitDepth &&
           mimeType == other.mimeType &&
           orientation == other.orientation);
 
@@ -76,6 +67,7 @@ class ImageMetadata {
   int get hashCode =>
       width.hashCode ^
       height.hashCode ^
+      bitDepth.hashCode ^
       mimeType.hashCode ^
       orientation.hashCode;
 
@@ -84,6 +76,7 @@ class ImageMetadata {
     return 'ImageMetaData{' +
         ' width: $width,' +
         ' height: $height,' +
+        ' bitDepth: $bitDepth,' +
         ' mimeType: $mimeType,' +
         ' orientation: $orientation,' +
         '}';
@@ -92,12 +85,14 @@ class ImageMetadata {
   ImageMetadata copyWith({
     int? width,
     int? height,
+    int? bitDepth,
     String? mimeType,
     int? orientation,
   }) {
     return ImageMetadata(
       width: width ?? this.width,
       height: height ?? this.height,
+      bitDepth: bitDepth ?? this.bitDepth,
       mimeType: mimeType ?? this.mimeType,
       orientation: orientation ?? this.orientation,
     );
@@ -107,6 +102,7 @@ class ImageMetadata {
     return {
       'width': this.width,
       'height': this.height,
+      'bitDepth': this.bitDepth,
       'mimeType': this.mimeType,
       'orientation': this.orientation,
     };
@@ -116,6 +112,7 @@ class ImageMetadata {
     return ImageMetadata(
       width: map['width'] as int,
       height: map['height'] as int,
+      bitDepth: map['bitDepth'] as int,
       mimeType: map['mimeType'] as String,
       orientation: map['orientation'] as int,
     );

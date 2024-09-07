@@ -23,7 +23,8 @@ void main() {
     });
 
     test('Test png decoder', () async {
-      await testFile("../../example/asset/img.png");
+      // await testFile("../../example/asset/img.png");
+      await testFile("../../example/asset/DmwV5zybe1.png");
     });
     //
     test('Test webp decoder', () async {
